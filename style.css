@@ -135,7 +135,7 @@ h2 {
 
 .control-band {
   display: grid;
-  grid-template-columns: minmax(280px, 360px) 1fr;
+  grid-template-columns: minmax(280px, 360px) auto 1fr;
   gap: 26px 32px;
   align-items: end;
   padding: 28px;
@@ -150,6 +150,7 @@ h2 {
 }
 
 .mode-group label,
+.control-label,
 .section-label {
   color: var(--muted);
   font-size: 0.95rem;
@@ -173,6 +174,44 @@ select {
   flex-wrap: wrap;
   gap: 14px;
   justify-content: flex-end;
+}
+
+.font-size-group {
+  display: grid;
+  gap: 10px;
+}
+
+.segmented-control {
+  display: flex;
+  min-height: 58px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #111820;
+}
+
+.font-size-button {
+  min-width: 64px;
+  min-height: 56px;
+  border: 0;
+  border-right: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 1.05rem;
+}
+
+.font-size-button:last-child {
+  border-right: 0;
+}
+
+.font-size-button:hover:not(:disabled) {
+  transform: none;
+}
+
+.font-size-button.active {
+  background: var(--accent-strong);
+  color: #06201e;
 }
 
 .support-message {
@@ -227,7 +266,7 @@ select {
 
 .conversation-log {
   display: flex;
-  flex-direction: column-reverse;
+  flex-direction: column;
   gap: 18px;
   max-height: calc(100vh - 410px);
   min-height: 320px;
@@ -295,6 +334,30 @@ select {
 
 .empty-state span {
   font-size: 1.1rem;
+}
+
+body[data-font-size="small"] .interim-text {
+  font-size: 1.5rem;
+}
+
+body[data-font-size="small"] .source-text {
+  font-size: 1.75rem;
+}
+
+body[data-font-size="small"] .translation-text {
+  font-size: 1.3rem;
+}
+
+body[data-font-size="large"] .interim-text {
+  font-size: 2.1rem;
+}
+
+body[data-font-size="large"] .source-text {
+  font-size: 2.65rem;
+}
+
+body[data-font-size="large"] .translation-text {
+  font-size: 1.9rem;
 }
 
 @media (max-width: 1100px) {
