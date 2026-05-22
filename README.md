@@ -49,6 +49,18 @@ Chrome Built-in AI Translator API が利用できない環境では、翻訳欄�
 
 この場合でも、Web Speech API が利用できる環境であれば音声認識の結果は表示できますが、翻訳はできません。
 
+## 翻訳できないときの確認
+
+音声認識はできるのに翻訳だけ失敗する場合は、Chrome Built-in AI Translator API の準備に失敗している可能性があります。
+
+1. デスクトップ版 Chrome 138 以降で開いているか確認します。
+2. Chromeのアドレスバーで `chrome://flags/#translation-api` を開きます。
+3. `Translation API` を `Enabled` に変更します。
+4. Chromeを再起動します。
+5. もう一度GitHub PagesのURLを開き、`開始` を押します。
+
+初回は翻訳モデルのダウンロードに時間がかかる場合があります。ダウンロード中はこのタブを開いたまま待ってください。
+
 ## GitHub Pagesで公開する方法
 
 1. このリポジトリをGitHubへpushします。

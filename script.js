@@ -35,6 +35,7 @@ let isListening = false;
 let shouldKeepListening = false;
 let recognitionHadBlockingError = false;
 let currentTranslator = null;
+let currentTranslatorPromise = null;
 let currentTranslatorKey = "";
 let logTotal = 0;
 
@@ -147,6 +148,34 @@ function getTranslatorGlobal() {
   return window.Translator || null;
 }
 
+function getTranslatorSetupHelp() {
+  return "Chrome 138以降のデスクトップ版Chromeで、chrome://flags/#translation-api を Enabled にして再起動してください。初回は翻訳モデルのダウンロードに時間がかかる場合があります。";
+}
+
+function describeTranslatorError(error) {
+  const detail = [error?.name, error?.message].filter(Boolean).join(": ");
+
+  if (!detail) {
+    return `翻訳APIの準備中にエラーが発生しました。${getTranslatorSetupHelp()}`;
+  }
+
+  return `翻訳APIの準備中にエラーが発生しました (${detail})。${getTranslatorSetupHelp()}`;
+}
+
+function handleTranslatorDownloadProgress(event) {
+  const loaded = Number(event.loaded);
+  const total = Number(event.total);
+  let percent = "";
+
+  if (Number.isFinite(loaded) && loaded >= 0 && loaded <= 1) {
+    percent = ` ${Math.round(loaded * 100)}%`;
+  } else if (Number.isFinite(loaded) && Number.isFinite(total) && total > 0) {
+    percent = ` ${Math.round((loaded / total) * 100)}%`;
+  }
+
+  setSupportMessage(`翻訳モデルをダウンロード中です${percent}。完了までこのタブを開いたまま待ってください。`, "warning");
+}
+
 async function getTranslator(mode) {
   const TranslatorGlobal = getTranslatorGlobal();
   const unavailableMessage = "この環境ではブラウザ内蔵翻訳APIが利用できません";
@@ -160,30 +189,43 @@ async function getTranslator(mode) {
     return { translator: currentTranslator, message: "", state: "ok" };
   }
 
-  try {
-    if (typeof TranslatorGlobal.availability === "function") {
-      const availability = await TranslatorGlobal.availability({
-        sourceLanguage: mode.sourceLanguage,
-        targetLanguage: mode.targetLanguage,
-      });
-
-      if (availability === "unavailable") {
-        return { translator: null, message: unavailableMessage, state: "unavailable" };
-      }
+  if (currentTranslatorPromise && currentTranslatorKey === key) {
+    try {
+      currentTranslator = await currentTranslatorPromise;
+      return { translator: currentTranslator, message: "", state: "ok" };
+    } catch (error) {
+      console.error(error);
+      return { translator: null, message: describeTranslatorError(error), state: "error" };
     }
+  }
 
-    currentTranslator = await TranslatorGlobal.create({
+  try {
+    // Translator.create() はユーザー操作直後に呼ぶ必要があるため、availability() を待たずに作成する。
+    currentTranslatorKey = key;
+    currentTranslatorPromise = TranslatorGlobal.create({
       sourceLanguage: mode.sourceLanguage,
       targetLanguage: mode.targetLanguage,
+      monitor(monitor) {
+        monitor.addEventListener("downloadprogress", handleTranslatorDownloadProgress);
+      },
+    }).then(async (translator) => {
+      if (translator.ready) {
+        await translator.ready;
+      }
+      return translator;
     });
-    currentTranslatorKey = key;
+
+    currentTranslator = await currentTranslatorPromise;
 
     return { translator: currentTranslator, message: "", state: "ok" };
   } catch (error) {
     console.error(error);
+    currentTranslator = null;
+    currentTranslatorPromise = null;
+    currentTranslatorKey = "";
     return {
       translator: null,
-      message: "翻訳APIの準備中にエラーが発生しました",
+      message: describeTranslatorError(error),
       state: "error",
     };
   }
@@ -369,6 +411,7 @@ clearButton.addEventListener("click", resetLog);
 modeSelect.addEventListener("change", () => {
   const mode = getMode();
   currentTranslator = null;
+  currentTranslatorPromise = null;
   currentTranslatorKey = "";
 
   if (recognition && isListening) {

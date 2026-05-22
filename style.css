@@ -181,6 +181,7 @@ select {
   color: var(--muted);
   font-size: 1.05rem;
   line-height: 1.6;
+  white-space: pre-line;
 }
 
 .support-message.warning {
