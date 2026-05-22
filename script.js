@@ -8,8 +8,11 @@ const supportMessage = document.getElementById("supportMessage");
 const interimText = document.getElementById("interimText");
 const conversationLog = document.getElementById("conversationLog");
 const logCount = document.getElementById("logCount");
+const fontSizeButtons = document.querySelectorAll("[data-font-size]");
 
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+const FONT_SIZE_STORAGE_KEY = "voiceTranslateFontSize";
+const FONT_SIZES = ["small", "medium", "large"];
 
 const MODES = {
   "ja-en": {
@@ -79,6 +82,23 @@ function updateLogCount() {
   logCount.textContent = `${logTotal} 件`;
 }
 
+function applyFontSize(size) {
+  const selectedSize = FONT_SIZES.includes(size) ? size : "medium";
+  document.body.dataset.fontSize = selectedSize;
+
+  fontSizeButtons.forEach((button) => {
+    const isActive = button.dataset.fontSize === selectedSize;
+    button.classList.toggle("active", isActive);
+    button.setAttribute("aria-pressed", String(isActive));
+  });
+
+  try {
+    localStorage.setItem(FONT_SIZE_STORAGE_KEY, selectedSize);
+  } catch (error) {
+    console.warn("文字サイズ設定を保存できませんでした。", error);
+  }
+}
+
 function removeEmptyState() {
   const emptyState = conversationLog.querySelector(".empty-state");
   if (emptyState) {
@@ -99,6 +119,7 @@ function addLogCard(sourceText, translationText, mode, translationState = "ok") 
 
   const card = document.createElement("article");
   card.className = "log-card";
+  card.tabIndex = -1;
   card.innerHTML = `
     <div class="log-meta">
       <span>${escapeHtml(mode.label)}</span>
@@ -114,8 +135,12 @@ function addLogCard(sourceText, translationText, mode, translationState = "ok") 
     </div>
   `;
 
-  // column-reverse により、新しいカードが表示上の先頭に来る。
-  conversationLog.appendChild(card);
+  // 新しいカードをログの先頭に追加し、授業中にすぐ読める位置へ自動スクロールする。
+  conversationLog.prepend(card);
+  conversationLog.scrollTop = 0;
+  requestAnimationFrame(() => {
+    card.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
   logTotal += 1;
   updateLogCount();
 }
@@ -408,6 +433,12 @@ startButton.addEventListener("click", startListening);
 stopButton.addEventListener("click", stopListening);
 clearButton.addEventListener("click", resetLog);
 
+fontSizeButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    applyFontSize(button.dataset.fontSize);
+  });
+});
+
 modeSelect.addEventListener("change", () => {
   const mode = getMode();
   currentTranslator = null;
@@ -428,6 +459,13 @@ window.addEventListener("error", (event) => {
   setStatus("エラー", "error");
   setSupportMessage("予期しないエラーが発生しました。画面を再読み込みして再度お試しください。", "error");
 });
+
+try {
+  applyFontSize(localStorage.getItem(FONT_SIZE_STORAGE_KEY) || "medium");
+} catch (error) {
+  console.warn("文字サイズ設定を読み込めませんでした。", error);
+  applyFontSize("medium");
+}
 
 updateLogCount();
 setStatus("待機中");
