@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Voice Translate Demo</title>
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="app-header">
+        <div>
+          <p class="kicker">Free browser APIs only</p>
+          <h1>Voice Translate Demo</h1>
+        </div>
+        <div class="status-panel" aria-live="polite">
+          <span class="status-dot" id="statusDot"></span>
+          <span id="statusText">待機中</span>
+        </div>
+      </header>
+
+      <main>
+        <section class="control-band" aria-label="操作パネル">
+          <div class="mode-group">
+            <label for="modeSelect">翻訳モード</label>
+            <select id="modeSelect">
+              <option value="ja-en">日本語 → 英語</option>
+              <option value="en-ja">English → Japanese</option>
+            </select>
+          </div>
+
+          <div class="button-row">
+            <button class="primary-button" id="startButton" type="button">開始</button>
+            <button id="stopButton" type="button" disabled>停止</button>
+            <button id="clearButton" type="button">ログを消去</button>
+          </div>
+
+          <p class="support-message" id="supportMessage">
+            マイクの使用許可を求められたら「許可」を選んでください。
+          </p>
+        </section>
+
+        <section class="live-preview" aria-label="聞き取り中の内容">
+          <div>
+            <p class="section-label">途中結果</p>
+            <p class="interim-text" id="interimText">開始すると、聞き取り中の言葉がここに表示されます。</p>
+          </div>
+        </section>
+
+        <section class="conversation-section" aria-label="会話ログ">
+          <div class="conversation-heading">
+            <h2>会話ログ</h2>
+            <span id="logCount">0 件</span>
+          </div>
+          <div class="conversation-log" id="conversationLog" aria-live="polite">
+            <article class="empty-state">
+              <p>まだ発話はありません。</p>
+              <span>「開始」を押して、マイクに向かって話してください。</span>
+            </article>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
